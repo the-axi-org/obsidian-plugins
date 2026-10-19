@@ -1,0 +1,9 @@
+{
+  "id": "{{id}}",
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "minAppVersion": "1.8.0",
+  "description": "{{description}}",
+  "author": "{{author}}",
+  "isDesktopOnly": false
+}

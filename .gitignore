@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+.env
+
+# Dev vault: keep notes and minimal config, ignore Obsidian's churn and build output
+vault/.obsidian/*
+!vault/.obsidian/app.json
+!vault/.obsidian/community-plugins.json
