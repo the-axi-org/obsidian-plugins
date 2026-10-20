@@ -20,6 +20,7 @@ Then enable community plugins. Hello World and Hot Reload are already listed in 
 | Command                                   | What it does                                                                                          |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `pnpm new <id> "<Name>" ["desc"]`         | Creates `plugins/<id>` from `templates/plugin` and checks the id against Obsidian's rules             |
+| `pnpm rename <old> <new> "<Name>"`        | Moves `plugins/<old>` and rewrites its id, name and class names, plus the vault entries               |
 | `pnpm dev <id>`                           | esbuild in watch mode for one plugin; output goes to `plugins/<id>/dist` and is copied into the vault |
 | `pnpm build`                              | Type-checks and builds every plugin for production (minified)                                         |
 | `pnpm test` / `pnpm test:watch`           | Vitest for all plugins; `pnpm test hello-world` runs only the files whose path matches                |
@@ -43,7 +44,7 @@ packages/
   obsidian-mock/         @op/obsidian-mock: runtime stand-in for the `obsidian` API + test helpers
 plugins/<id>/            one folder per plugin: manifest.json, src/, test/, styles.css
 templates/plugin/        what `pnpm new` copies
-scripts/                 new-plugin, dev, version-bump, setup-vault
+scripts/                 new-plugin, rename-plugin, dev, version-bump, setup-vault
 vault/                   test vault (only notes and minimal config are committed)
 ```
 

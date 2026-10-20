@@ -11,6 +11,7 @@
     "lint": "pnpm --filter \"./plugins/*\" lint",
     "format": "prettier --write .",
     "new": "node scripts/new-plugin.mjs",
+    "rename": "node scripts/rename-plugin.mjs",
     "version-bump": "node scripts/version-bump.mjs",
     "vault:setup": "node scripts/setup-vault.mjs"
   },
