@@ -16,6 +16,7 @@ Automated coverage: `test/plugin.test.ts` exercises most of these paths against 
 - [ ] **Start → switch → stop.** Start a timer on task A (view button or "Start timer on current note"), wait a minute or two, start task B, wait, then stop. Today's log (`Tasks/_log/YYYY-MM-DD.md`) has two entries, A then B, and the B entry starts where A's ends. A `todo` task moves to `doing` when started.
 - [ ] **Status bar.** While running it shows `⏱ <title> · h:mm:ss`, ticking every second, and clicking it opens the task. When idle it shows `⏱ No task`, and clicking it opens the task view.
 - [ ] **Restart.** Quit Obsidian with a timer running and reopen it. The status bar's elapsed time includes the time Obsidian was closed.
+- [ ] **Sync (if you use Obsidian Sync or another sync tool).** Start a timer on one device. Once the sync lands, the other device's status bar and task view show it without a restart. Stop it on the second device, and the first device shows `⏱ No task` after the next sync.
 - [ ] **Stale timer.** With a timer running, quit, set the system clock past `maxRunningHours` (default 12 h), and reopen. Or set the threshold low and wait. The "Timer still running" modal appears once. Use "Stop at…" with a time between the start and now: the log gets an entry ending at that time, split across days if needed. A time outside that range shows an error.
 - [ ] **Rename and move.** Rename a running task and move it to another project folder, then stop. The entry carries the same id (the link text shows the new name), and the time counts toward the task's new project.
 - [ ] **Delete while running.** Delete a running task's note. The timer stops and the entry is written.
@@ -26,7 +27,7 @@ Automated coverage: `test/plugin.test.ts` exercises most of these paths against 
 
 - [ ] Opens in the right sidebar from the ribbon icon or "Open task view".
 - [ ] The header shows today's and this week's totals. While a timer runs it shows the task, a ticking elapsed time and a stop button.
-- [ ] Groups are sorted alphabetically, nested projects are indented, and collapsing a parent hides its children. Collapse state and filters survive a restart.
+- [ ] Groups are sorted alphabetically, nested projects are indented, and collapsing a parent hides its children. Collapse state and filters survive a restart. They're saved with the workspace layout, so each device keeps its own.
 - [ ] The group total follows the Today / Week / All toggle and includes sub-folders.
 - [ ] Each row: the checkbox toggles done; clicking the title opens the note; hovering the title shows a page preview (configurable under Settings → Page preview → Task tracker); clicking a tag chip adds it to the filter; tracked-today / estimate reads like `35m / 1h30m`; the play/stop button works.
 - [ ] Status filter (All / Open / Done), tag filter (a task must have every selected tag) and title search all narrow the list.

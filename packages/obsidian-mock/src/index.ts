@@ -326,12 +326,28 @@ export class WorkspaceLeaf {
     this.app.workspace.activeFile = file;
     this.app.workspace.opened.push(file.path);
   }
-  async setViewState({ type }: { type: string }) {
+  async setViewState({ type, state }: ViewState, _eState?: any) {
     const factory = this.app.workspace.viewFactories.get(type);
     if (!factory) throw new Error(`No view registered for ${type}`);
     this.view = factory(this);
     await this.view.onOpen();
+    await this.view.setState(state ?? {}, { history: false });
   }
+  getViewState(): ViewState {
+    return { type: this.view?.getViewType() ?? "empty", state: this.view?.getState() ?? {} };
+  }
+}
+
+export interface ViewState {
+  type: string;
+  state?: Record<string, unknown>;
+  active?: boolean;
+  pinned?: boolean;
+  group?: WorkspaceLeaf;
+}
+
+export interface ViewStateResult {
+  history: boolean;
 }
 
 export class Workspace extends Events {
@@ -341,6 +357,7 @@ export class Workspace extends Events {
   /** Test-only: populated by `Plugin.registerView`. */
   readonly viewFactories = new Map<string, (leaf: WorkspaceLeaf) => View>();
   private leaves: WorkspaceLeaf[] = [];
+  requestSaveLayout: Debouncer<[], Promise<void>> = debounce(async () => {}, 0);
   constructor(private app: App) {
     super();
   }
@@ -386,6 +403,10 @@ export abstract class View extends Component {
   getIcon() {
     return "";
   }
+  getState(): Record<string, unknown> {
+    return {};
+  }
+  async setState(_state: unknown, _result: ViewStateResult) {}
   async onOpen() {}
   async onClose() {}
 }
@@ -406,7 +427,8 @@ export class Plugin extends Component {
   readonly commands: Command[] = [];
   readonly settingTabs: PluginSettingTab[] = [];
   readonly ribbonIcons: { icon: string; title: string; callback: Callback; el: HTMLElement }[] = [];
-  data: unknown = null;
+  /** Test-only: the contents of `data.json`. */
+  savedData: unknown = null;
 
   constructor(
     public app: App,
@@ -433,11 +455,12 @@ export class Plugin extends Component {
     return el;
   }
   async loadData(): Promise<any> {
-    return structuredClone(this.data);
+    return structuredClone(this.savedData);
   }
   async saveData(data: unknown) {
-    this.data = structuredClone(data);
+    this.savedData = structuredClone(data);
   }
+  onExternalSettingsChange?(): any;
   registerView(type: string, factory: (leaf: WorkspaceLeaf) => View) {
     this.app.workspace.viewFactories.set(type, factory);
   }
@@ -791,7 +814,7 @@ export async function loadPlugin<P>(
   { app = createMockApp(), data = null }: { app?: App; data?: unknown } = {},
 ): Promise<P & Plugin> {
   const plugin = new PluginClass(app, manifest) as P & Plugin;
-  plugin.data = structuredClone(data);
+  plugin.savedData = structuredClone(data);
   await plugin.onload();
   return plugin;
 }

@@ -62,7 +62,9 @@ Free-form notes.
 
 ### Plugin data
 
-`data.json` holds `settings`, the view's filters and collapsed groups (`view`), and the running timer as `activeTimer: { taskId, start }` (start is a local ISO timestamp). Elapsed time is always computed from `start`, so it survives restarts.
+`data.json` holds `settings` and the running timer as `activeTimer: { taskId, start }` (start is a local ISO timestamp). Elapsed time is always computed from `start`, so it survives restarts. When a sync tool changes `data.json`, the plugin reloads it, so a timer started on one device shows up on the others. If two devices change it at once, the last write wins.
+
+The task view's filters and collapsed groups are view state. Obsidian saves them with the workspace layout (`workspace.json`), per device.
 
 ## Development
 

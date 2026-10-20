@@ -20,12 +20,12 @@ import { ensureFolder, ensureLogNote, Timer, TimerStatusBar, type ActiveTimer } 
 import { NewTaskModal, type NewTaskInput } from "./ui/newTaskModal";
 import { StaleTimerModal } from "./ui/staleTimerModal";
 import { TaskSuggestModal } from "./ui/taskSuggest";
-import { DEFAULT_VIEW_STATE, TaskView, VIEW_TYPE, type ViewState } from "./ui/taskView";
+import { TaskView, VIEW_TYPE } from "./ui/taskView";
 
+/** `data.json`. It syncs between devices, so it holds only settings and the running timer. */
 export interface PluginData {
   settings: TaskTrackerSettings;
   activeTimer: ActiveTimer | null;
-  view: ViewState;
 }
 
 function readActiveTimer(value: unknown): ActiveTimer | null {
@@ -38,9 +38,8 @@ export default class TaskTrackerPlugin extends Plugin {
   data: PluginData = {
     settings: { ...DEFAULT_SETTINGS },
     activeTimer: null,
-    view: { ...DEFAULT_VIEW_STATE },
   };
-  /** Same object as `data.settings`. */
+  /** Same object as `data.settings`, for the plugin's whole lifetime. */
   override settings: TaskTrackerSettings = this.data.settings;
   tasks!: TaskIndex;
   time!: TimeIndex;
@@ -256,14 +255,22 @@ export default class TaskTrackerPlugin extends Plugin {
     await this.time.build();
   }
 
+  /** Updates `data` in place, so anything holding `settings` sees the new values. */
   async loadPluginData() {
     const saved = (await this.loadData()) as Partial<PluginData> | null;
-    this.data = {
-      settings: { ...DEFAULT_SETTINGS, ...saved?.settings },
-      activeTimer: readActiveTimer(saved?.activeTimer),
-      view: { ...DEFAULT_VIEW_STATE, ...saved?.view },
-    };
-    this.settings = this.data.settings;
+    Object.assign(this.settings, DEFAULT_SETTINGS, saved?.settings);
+    this.data.activeTimer = readActiveTimer(saved?.activeTimer);
+  }
+
+  /**
+   * `data.json` changed on disk, usually through Sync. Adopts the other device's settings and timer,
+   * so a timer started or stopped there shows up here. The last device to write wins.
+   */
+  override async onExternalSettingsChange() {
+    const { tasksRoot, logFolder } = this.settings;
+    await this.loadPluginData();
+    if (this.settings.tasksRoot !== tasksRoot || this.settings.logFolder !== logFolder) await this.reindex();
+    this.timer.trigger("changed");
   }
 
   async persist() {

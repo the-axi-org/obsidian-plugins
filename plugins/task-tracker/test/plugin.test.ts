@@ -10,6 +10,7 @@ import {
   type Command,
   type Modal as MockModal,
   type TextComponent,
+  WorkspaceLeaf,
 } from "@op/obsidian-mock";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import manifest from "../manifest.json";
@@ -213,6 +214,25 @@ describe("timer", () => {
     expect(openModals).toHaveLength(0);
   });
 
+  it("picks up a timer and settings synced from another device", async () => {
+    const { plugin } = await setup({ ...files, "Logs/2026-09-26.md": "# 2026-09-26\n\n- 08:00–08:30 [[Alpha]] (t-00000a)\n" });
+    const settings = plugin.settings;
+    const status = () => (plugin as unknown as { statusBarItems: HTMLElement[] }).statusBarItems[0]!.textContent;
+    expect(status()).toBe("⏱ No task");
+
+    const start = new Date(2026, 8, 26, 8, 50).toISOString();
+    plugin.savedData = { settings: { ...settings, logFolder: "Logs" }, activeTimer: { taskId: "t-00000b", start } };
+    await plugin.onExternalSettingsChange();
+    expect(status()).toBe("⏱ Beta · 0:10:00");
+    expect(plugin.timer.isRunning("t-00000b")).toBe(true);
+    expect(settings.logFolder).toBe("Logs"); // same object, so the settings tab sees it too
+    expect(plugin.time.forDate("2026-09-26")).toHaveLength(1);
+
+    plugin.savedData = { settings, activeTimer: null };
+    await plugin.onExternalSettingsChange();
+    expect(status()).toBe("⏱ No task");
+  });
+
   it("asks about a stale timer once, and Stop at… writes the chosen end", async () => {
     const start = new Date(2026, 8, 25, 18, 0);
     setNow(new Date(2026, 8, 26, 9, 0)); // 15 h later
@@ -298,7 +318,8 @@ describe("task view", () => {
   it("filters by tag chip and updates when tags are edited by hand", async () => {
     const { app, view, plugin } = await openView(files);
     view.addTagFilter("backend");
-    expect(plugin.data.view.tags).toEqual(["backend"]);
+    expect(view.getState().tags).toEqual(["backend"]);
+    expect(plugin.savedData).toBeNull();
     expect(view.contentEl.querySelectorAll(".tt-row")).toHaveLength(2);
 
     const gamma = app.vault.getFileByPath("Tasks/Work/Backend/Gamma.md")!;
@@ -307,12 +328,26 @@ describe("task view", () => {
     expect([...view.contentEl.querySelectorAll(".tt-title")].map((t) => t.textContent)).toEqual(["Alpha"]);
   });
 
-  it("collapses groups and remembers it", async () => {
-    const { view, plugin } = await openView(files);
+  it("collapses groups and keeps it in the view state Obsidian saves", async () => {
+    const { app, view } = await openView(files);
+    const save = vi.spyOn(app.workspace, "requestSaveLayout");
     view.contentEl.querySelector<HTMLElement>(".tt-group-header")!.click();
-    expect(plugin.data.view.collapsed).toEqual(["Work"]);
+    expect(save).toHaveBeenCalled();
     expect(view.contentEl.querySelectorAll(".tt-row")).toHaveLength(0);
-    expect(await plugin.loadData()).toMatchObject({ view: { collapsed: ["Work"] } });
+
+    // A layout restore hands the saved state to a fresh view.
+    const leaf = new WorkspaceLeaf(app);
+    await leaf.setViewState({ type: VIEW_TYPE, state: view.getState() });
+    const restored = leaf.view as unknown as TaskView;
+    expect(restored.getState()).toMatchObject({ status: "open", collapsed: ["Work"] });
+    expect(restored.contentEl.querySelectorAll(".tt-row")).toHaveLength(0);
+  });
+
+  it("falls back to defaults for a malformed saved state", async () => {
+    const { view } = await openView(files);
+    await view.setState({ status: "bogus", tags: "backend", collapsed: ["Work", 3], range: "week" }, { history: false });
+    expect(view.getState()).toEqual({ status: "open", tags: [], search: "", range: "week", collapsed: ["Work"] });
+    expect(view.contentEl.querySelector<HTMLSelectElement>(".tt-status")!.value).toBe("open");
   });
 
   it("toggles done from the checkbox", async () => {

@@ -1,6 +1,6 @@
 # Task Tracker: what landed
 
-Compared against [`SPEC.md`](SPEC.md). Status as of 2026-10-20: `pnpm typecheck`, `pnpm lint`, `pnpm test` (94 tests) and `pnpm build` pass. The manual checklist in [`TESTING.md`](TESTING.md) has **not** been run in Obsidian yet.
+Compared against [`SPEC.md`](SPEC.md). Status as of 2026-10-20: `pnpm typecheck`, `pnpm lint`, `pnpm test` (96 tests) and `pnpm build` pass. The manual checklist in [`TESTING.md`](TESTING.md) has **not** been run in Obsidian yet.
 
 ## Landed
 
@@ -38,7 +38,9 @@ On-disk formats (task frontmatter, log lines, `activeTimer`) match the spec exac
 - `test/plugin.test.ts` also tests the Obsidian-facing wiring (commands, timer log writes, indexes, the view) against `@op/obsidian-mock`. I read "pure modules only" as describing which code is unit-testable, not as a ban. If it was meant strictly, this file is the deviation, and it can be removed without affecting the required tests.
 
 **Choices where the spec was silent or ambiguous**
-- **Plugin data layout:** `data.json` is `{ settings, activeTimer, view }`. The spec puts `activeTimer` alongside settings, and grouping the settings under one key keeps them separate from runtime and view state.
+- **Plugin data layout:** `data.json` is `{ settings, activeTimer }`. The spec stores both in plugin data without saying how they're arranged. Grouping the settings under one key keeps them separate from runtime state. This is nested rather than the sample plugin's flat settings object.
+- **View filters and collapsed groups** are view state (`getState`/`setState`), which Obsidian saves per leaf in `workspace.json`, following Obsidian convention. They stay on each device rather than syncing through `data.json`.
+- **Synced timer:** `onExternalSettingsChange` reloads `data.json` when Sync changes it, so a timer started or stopped on another device shows up without a restart. It also re-indexes if the folder settings changed. Concurrent changes on two devices resolve as last write wins.
 - **"Stop at…" takes a date and time** (`datetime-local`), not just a time. A stale timer has usually crossed midnight, so a time alone would be ambiguous. It's validated to be between the start minute and now.
 - **todo → doing on start only when the note literally says `todo`.** A note with an unknown status displays as todo but isn't rewritten (§4.1).
 - **Row time is always "tracked today / estimate"**, as §8 says. The Today/Week/All toggle drives the group totals only. Group totals include sub-folders, because collapsing a parent hides its children.
@@ -55,13 +57,14 @@ On-disk formats (task frontmatter, log lines, `activeTimer`) match the spec exac
 
 **Shared mock (`packages/obsidian-mock`).** Plugin wiring tests needed more of the API, so per AGENTS.md the mock was extended rather than adding `vi.mock` calls:
 - **Vault:** folders, `createFolder`, `getFolderByPath`, `getAllLoadedFiles` and `rename`.
-- **New APIs:** `MetadataCache` (with a small YAML subset), `FileManager.processFrontMatter`/`renameFile`, `parseYaml`/`stringifyYaml`/`getFrontMatterInfo`, `WorkspaceLeaf`, `View`/`ItemView`, workspace leaf helpers (`getLeaf`, `getLeavesOfType`, `ensureSideLeaf`, `revealLeaf`), `SuggestModal`/`FuzzySuggestModal`, `AbstractInputSuggest`, `setIcon`, `debounce`, `TextComponent.inputEl`, `registerView`/`registerHoverLinkSource`.
+- **New APIs:** `MetadataCache` (with a small YAML subset), `FileManager.processFrontMatter`/`renameFile`, `parseYaml`/`stringifyYaml`/`getFrontMatterInfo`, `WorkspaceLeaf` (`setViewState`/`getViewState`), `View`/`ItemView` (`getState`/`setState`), workspace leaf helpers (`getLeaf`, `getLeavesOfType`, `ensureSideLeaf`, `revealLeaf`, `requestSaveLayout`), `SuggestModal`/`FuzzySuggestModal`, `AbstractInputSuggest`, `setIcon`, `debounce`, `TextComponent.inputEl`, `registerView`/`registerHoverLinkSource`, `Plugin.onExternalSettingsChange`.
+- **Fix:** the mock `Plugin` kept saved data in a test-only field called `data`. That field collided with a plugin's own `data` field, so every `saveData` swapped the plugin's object for a clone. It's now `savedData`.
 - **DOM helpers:** `setAttr`, `setCssProps`, `appendText`.
-- **Test-only extras** (not in `obsidian.d.ts`, commented as such): `Vault.readNow`, `Workspace.opened`/`viewFactories`, `Plugin.statusBarItems`, `openModals`.
+- **Test-only extras** (not in `obsidian.d.ts`, commented as such): `Vault.readNow`, `Workspace.opened`/`viewFactories`, `Plugin.statusBarItems`/`savedData`, `openModals`.
 - **Signatures** were checked against `obsidian.d.ts`, and `getAbstractFileByPath`, `getFrontMatterInfo`, `FuzzyMatch`, `rename` and `registerHoverLinkSource` were corrected to match.
 
 **Other repo changes**
-- **Extra tests:** `test/breaks.test.ts` and `test/task.test.ts` cover the pure break and task helpers. `test/plugin.test.ts` (see above) covers task creation, start → switch → stop, the midnight split, stale "Stop at…", rename and delete while running, duplicates, preserved log comments, and view filters reacting to hand-edited tags.
+- **Extra tests:** `test/breaks.test.ts` and `test/task.test.ts` cover the pure break and task helpers. `test/plugin.test.ts` (see above) covers task creation, start → switch → stop, the midnight split, stale "Stop at…", rename and delete while running, a timer and settings synced from another device, duplicates, preserved log comments, view filters reacting to hand-edited tags, and view state round-tripping through `getState`/`setState`.
 - **Template test:** the template's sample test (`test/main.test.ts`) was removed because it tested the template's greeting command.
 - **Dev vault:** `vault/.obsidian/community-plugins.json` now enables `task-tracker`.
 - **Spec location:** `SPEC.md` moved from the repo root into this folder.

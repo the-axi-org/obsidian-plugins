@@ -1,4 +1,4 @@
-import { debounce, ItemView, setIcon, type HoverPopover, type WorkspaceLeaf } from "obsidian";
+import { debounce, ItemView, setIcon, type HoverPopover, type ViewStateResult, type WorkspaceLeaf } from "obsidian";
 import {
   filterRange,
   projectAncestors,
@@ -17,8 +17,8 @@ export const VIEW_TYPE = "task-tracker-view";
 
 export type StatusFilter = "all" | "open" | "done";
 
-/** Persisted under `view` in plugin data. */
-export interface ViewState {
+/** The view's filters and collapsed groups. Obsidian saves it per leaf in `workspace.json`. */
+export interface TaskViewState {
   status: StatusFilter;
   tags: string[];
   search: string;
@@ -26,19 +26,26 @@ export interface ViewState {
   collapsed: string[];
 }
 
-export const DEFAULT_VIEW_STATE: ViewState = {
-  status: "open",
-  tags: [],
-  search: "",
-  range: "today",
-  collapsed: [],
-};
-
 const RANGE_LABELS: Record<Range, string> = { today: "Today", week: "Week", all: "All" };
 const STATUS_LABELS: Record<StatusFilter, string> = { all: "All", open: "Open", done: "Done" };
 
+/** Reads a saved view state, falling back to defaults for anything missing or malformed. */
+export function readViewState(value: unknown): TaskViewState {
+  const s = (value ?? {}) as Partial<Record<keyof TaskViewState, unknown>>;
+  const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  const oneOf = <T extends string>(v: unknown, labels: Record<T, string>, fallback: T): T =>
+    typeof v === "string" && v in labels ? (v as T) : fallback;
+  return {
+    status: oneOf(s.status, STATUS_LABELS, "open"),
+    tags: strings(s.tags),
+    search: typeof s.search === "string" ? s.search : "",
+    range: oneOf(s.range, RANGE_LABELS, "today"),
+    collapsed: strings(s.collapsed),
+  };
+}
+
 /** Pure filter used by the view: status, all selected tags, and a case-insensitive title search. */
-export function filterTasks(tasks: Iterable<Task>, state: Pick<ViewState, "status" | "tags" | "search">): Task[] {
+export function filterTasks(tasks: Iterable<Task>, state: Pick<TaskViewState, "status" | "tags" | "search">): Task[] {
   const q = state.search.trim().toLowerCase();
   return [...tasks].filter(
     (t) =>
@@ -68,6 +75,7 @@ export function compareProjects(a: string, b: string): number {
 export class TaskView extends ItemView {
   hoverPopover: HoverPopover | null = null;
 
+  private state = readViewState(null);
   private headerEl!: HTMLElement;
   private elapsedEl: HTMLElement | null = null;
   private tagFilterEl!: HTMLElement;
@@ -98,14 +106,24 @@ export class TaskView extends ItemView {
     return "list-checks";
   }
 
-  private get state(): ViewState {
-    return this.plugin.data.view;
+  override getState(): Record<string, unknown> {
+    return { ...super.getState(), ...this.state, tags: [...this.state.tags], collapsed: [...this.state.collapsed] };
   }
 
-  /** Applies a filter/range/collapse change, saves it, and re-renders. */
-  private update(patch: Partial<ViewState>) {
+  override async setState(state: unknown, result: ViewStateResult): Promise<void> {
+    this.state = readViewState(state);
+    if (this.listEl) {
+      this.statusSelect.value = this.state.status;
+      this.searchInput.value = this.state.search;
+      this.render();
+    }
+    await super.setState(state, result);
+  }
+
+  /** Applies a filter/range/collapse change, asks Obsidian to save the layout, and re-renders. */
+  private update(patch: Partial<TaskViewState>) {
     Object.assign(this.state, patch);
-    void this.plugin.persist();
+    this.app.workspace.requestSaveLayout();
     this.render();
   }
 
