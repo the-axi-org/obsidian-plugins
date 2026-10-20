@@ -1,0 +1,9 @@
+{
+  "id": "task-tracker",
+  "name": "Task Tracker",
+  "version": "0.1.0",
+  "minAppVersion": "1.8.0",
+  "description": "Task tracking with projects, tags and time tracking.",
+  "author": "Ankush Anand",
+  "isDesktopOnly": false
+}

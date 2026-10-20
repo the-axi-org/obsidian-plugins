@@ -43,7 +43,7 @@ importers:
 
   packages/obsidian-mock: {}
 
-  plugins/demo:
+  plugins/hello-world:
     devDependencies:
       '@op/build':
         specifier: workspace:*
@@ -52,7 +52,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/obsidian-mock
 
-  plugins/hello-world:
+  plugins/task-tracker:
     devDependencies:
       '@op/build':
         specifier: workspace:*

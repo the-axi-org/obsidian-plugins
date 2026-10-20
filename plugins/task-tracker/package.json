@@ -1,0 +1,16 @@
+{
+  "name": "task-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@op/build": "workspace:*",
+    "@op/obsidian-mock": "workspace:*"
+  }
+}

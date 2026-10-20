@@ -44,6 +44,16 @@ Object.assign(proto, {
   toggleClass(this: HTMLElement, cls: string, value: boolean) {
     this.classList.toggle(cls, value);
   },
+  setAttr(this: HTMLElement, name: string, value: string | number | boolean | null) {
+    if (value === null) this.removeAttribute(name);
+    else this.setAttribute(name, String(value));
+  },
+  setCssProps(this: HTMLElement, props: Record<string, string>) {
+    for (const [k, v] of Object.entries(props)) this.style.setProperty(k, v);
+  },
+  appendText(this: HTMLElement, text: string) {
+    this.appendChild(document.createTextNode(text));
+  },
 });
 
 Object.assign(globalThis, {
