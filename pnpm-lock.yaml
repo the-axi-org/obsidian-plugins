@@ -52,7 +52,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/obsidian-mock
 
-  plugins/task-tracker:
+  plugins/task-ledger:
     devDependencies:
       '@op/build':
         specifier: workspace:*
