@@ -23,6 +23,8 @@ Task tracking for Obsidian with projects, tags and time tracking. Tasks are ordi
 | Remind me to take breaks | on | |
 | Break interval | 50 minutes | |
 
+If you rename or move the tasks or log folder in the vault, update the setting to match. Until you do, tasks or tracked time in it won't show.
+
 ## File formats
 
 ### Task note

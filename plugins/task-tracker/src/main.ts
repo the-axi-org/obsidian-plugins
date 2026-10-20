@@ -101,11 +101,12 @@ export default class TaskTrackerPlugin extends Plugin {
     this.breaks.tick(now, start?.getTime() ?? null, s.breakIntervalMinutes, s.breakRemindersEnabled);
     if (start && !this.staleChecked && now - start.getTime() > s.maxRunningHours * 3_600_000) {
       this.staleChecked = true;
+      const active = { ...this.timer.active! };
       new StaleTimerModal(this.app, {
-        title: this.timer.title(this.timer.active!.taskId),
+        title: this.timer.title(active.taskId),
         start,
         onChoose: ({ stopAt }) => {
-          if (stopAt) void this.timer.stop(stopAt);
+          if (stopAt) void this.timer.stop(stopAt, active);
         },
       }).open();
     }

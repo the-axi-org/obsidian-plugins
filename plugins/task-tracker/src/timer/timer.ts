@@ -88,9 +88,12 @@ export class Timer extends Events {
     });
   }
 
-  /** Stops the running timer, writing its entries. `end` defaults to now. */
-  stop(end?: Date): Promise<void> {
-    return this.enqueue(() => this.stopNow(end ?? new Date()));
+  /** Stops the running timer. When `expected` is supplied, ignores a replaced timer. */
+  stop(end?: Date, expected?: ActiveTimer): Promise<void> {
+    return this.enqueue(async () => {
+      if (expected && !this.matchesActive(expected)) return;
+      await this.stopNow(end ?? new Date());
+    });
   }
 
   toggle(task: Task): Promise<void> {
@@ -124,8 +127,14 @@ export class Timer extends Events {
     const start = new Date(active.start);
     if (end.getTime() < start.getTime()) end = start;
     await this.appendEntries(active.taskId, splitByDay(start, end));
+    // Sync may have replaced the timer while the log writes were in flight.
+    if (!this.matchesActive(active)) return;
     await this.host.setActive(null);
     this.trigger("changed");
+  }
+
+  private matchesActive(timer: ActiveTimer): boolean {
+    return this.active?.taskId === timer.taskId && this.active.start === timer.start;
   }
 
   private async appendEntries(taskId: string, spans: DaySpan[]) {

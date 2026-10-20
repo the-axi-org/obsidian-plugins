@@ -61,9 +61,15 @@ export class TimeIndex extends Events {
     );
     register(
       vault.on("rename", (file, oldPath) => {
+        // Obsidian follows a folder rename with one event per descendant, but rebuild anyway in
+        // case a move doesn't (forum reports differ).
+        if (!(file instanceof TFile)) {
+          void this.build();
+          return;
+        }
         const old = this.dateOf(oldPath);
         if (old) this.byDate.delete(old);
-        if (file instanceof TFile && this.dateOf(file.path)) void this.reparse(file);
+        if (this.dateOf(file.path)) void this.reparse(file);
         else if (old) this.trigger("changed");
       }),
     );

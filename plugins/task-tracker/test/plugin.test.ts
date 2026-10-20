@@ -233,6 +233,69 @@ describe("timer", () => {
     expect(status()).toBe("⏱ No task");
   });
 
+  it("preserves a synced timer received while a stop is writing its log", async () => {
+    const { app, plugin } = await setup(files);
+    await plugin.timer.start(plugin.tasks.get("t-00000a")!);
+    setNow(new Date(2026, 8, 26, 9, 20));
+    const process = app.vault.process.bind(app.vault);
+    let release!: () => void;
+    let entered!: () => void;
+    const enteredProcess = new Promise<void>((resolve) => { entered = resolve; });
+    const blocked = new Promise<void>((resolve) => { release = resolve; });
+    vi.spyOn(app.vault, "process").mockImplementationOnce(async (file, fn) => {
+      entered();
+      await blocked;
+      return process(file, fn);
+    });
+    const stopping = plugin.timer.stop();
+    await enteredProcess;
+    const activeTimer = { taskId: "t-00000b", start: new Date().toISOString() };
+    plugin.savedData = { settings: plugin.settings, activeTimer };
+    await plugin.onExternalSettingsChange();
+    release();
+    await stopping;
+    expect(plugin.data.activeTimer).toEqual(activeTimer);
+    expect(await plugin.loadData()).toMatchObject({ activeTimer });
+    expect(read(app, "Tasks/_log/2026-09-26.md")).toContain("09:00–09:20 [[Alpha]]");
+  });
+
+  it.each(["t-00000a", "t-00000b"])("ignores a stale dialog after Sync replaces the timer with %s", async (taskId) => {
+    const { app, plugin } = await setup(files, {
+      activeTimer: { taskId: "t-00000a", start: new Date(2026, 8, 25, 18, 0).toISOString() },
+    });
+    const modal = staleModal();
+    const activeTimer = { taskId, start: new Date(2026, 8, 26, 8, 50).toISOString() };
+    plugin.savedData = { settings: plugin.settings, activeTimer };
+    await plugin.onExternalSettingsChange();
+    const stop = getSettings(modal.contentEl).find((s) => s.nameEl.textContent === "Stop now")!;
+    await (stop.components[0] as ButtonComponent).simulateClick();
+    await flush();
+    expect(plugin.data.activeTimer).toEqual(activeTimer);
+    expect(app.vault.getFileByPath("Tasks/_log/2026-09-26.md")).toBeNull();
+  });
+
+  it("rebuilds time totals when a log folder or its ancestor is renamed", async () => {
+    const { app, plugin } = await setup({
+      ...files,
+      "Tasks/_log/2026-09-26.md": "- 08:00–08:30 [[Alpha]] (t-00000a)\n",
+    });
+    expect(plugin.time.forDate("2026-09-26")).toHaveLength(1);
+    const renames: string[] = [];
+    app.vault.on("rename", (file, oldPath) => renames.push(`${oldPath} → ${file.path}`));
+    await app.vault.rename(app.vault.getFolderByPath("Tasks")!, "Moved");
+    await flush();
+    expect(plugin.time.entries()).toEqual([]);
+    // The folder first, then each descendant, as Obsidian does.
+    expect(renames[0]).toBe("Tasks → Moved");
+    expect(renames).toContain("Tasks/_log/2026-09-26.md → Moved/_log/2026-09-26.md");
+    await app.vault.rename(app.vault.getFolderByPath("Moved")!, "Tasks");
+    await flush();
+    expect(plugin.time.forDate("2026-09-26")).toHaveLength(1);
+    await app.vault.rename(app.vault.getFolderByPath("Tasks/_log")!, "Tasks/Archived");
+    await flush();
+    expect(plugin.time.entries()).toEqual([]);
+  });
+
   it("asks about a stale timer once, and Stop at… writes the chosen end", async () => {
     const start = new Date(2026, 8, 25, 18, 0);
     setNow(new Date(2026, 8, 26, 9, 0)); // 15 h later

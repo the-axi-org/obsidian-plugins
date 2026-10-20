@@ -162,10 +162,14 @@ export class Vault extends Events {
     this.trigger("create", file);
     return file;
   }
-  /** Moves a file. Folder renames only move the folder entry, not its children. */
+  /**
+   * Moves a file or a folder subtree. A folder emits a rename event for itself, then one for each
+   * descendant, as Obsidian does (per plugin developers on the forum; `obsidian.d.ts` doesn't say).
+   */
   async rename(file: TAbstractFile, newPath: string) {
     const oldPath = file.path;
     newPath = normalizePath(newPath);
+    const moved: [TAbstractFile, string][] = [];
     if (file instanceof TFile) {
       const data = this.contents.get(oldPath) ?? "";
       this.files.delete(oldPath);
@@ -173,11 +177,29 @@ export class Vault extends Events {
       this.files.set(newPath, file);
       this.contents.set(newPath, data);
     } else if (file instanceof TFolder) {
+      for (const [path, child] of [...this.folders]) {
+        if (!path.startsWith(`${oldPath}/`)) continue;
+        child.path = newPath + path.slice(oldPath.length);
+        this.folders.delete(path);
+        this.folders.set(child.path, child);
+        moved.push([child, path]);
+      }
+      for (const [path, child] of [...this.files]) {
+        if (!path.startsWith(`${oldPath}/`)) continue;
+        const data = this.contents.get(path) ?? "";
+        child.path = newPath + path.slice(oldPath.length);
+        this.files.delete(path);
+        this.contents.delete(path);
+        this.files.set(child.path, child);
+        this.contents.set(child.path, data);
+        moved.push([child, path]);
+      }
       this.folders.delete(oldPath);
       this.folders.set(newPath, file);
     }
     file.path = newPath;
     this.trigger("rename", file, oldPath);
+    for (const [child, path] of moved) this.trigger("rename", child, path);
   }
   async read(file: TFile) {
     return this.readNow(file);

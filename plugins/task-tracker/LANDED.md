@@ -1,6 +1,6 @@
 # Task Tracker: what landed
 
-Compared against [`SPEC.md`](SPEC.md). Status as of 2026-10-20: `pnpm typecheck`, `pnpm lint`, `pnpm test` (96 tests) and `pnpm build` pass. The manual checklist in [`TESTING.md`](TESTING.md) has **not** been run in Obsidian yet.
+Compared against [`SPEC.md`](SPEC.md). Status as of 2026-10-20: `pnpm typecheck`, `pnpm lint`, `pnpm test` (100 tests) and `pnpm build` pass. The manual checklist in [`TESTING.md`](TESTING.md) has **not** been run in Obsidian yet.
 
 ## Landed
 
@@ -40,7 +40,11 @@ On-disk formats (task frontmatter, log lines, `activeTimer`) match the spec exac
 **Choices where the spec was silent or ambiguous**
 - **Plugin data layout:** `data.json` is `{ settings, activeTimer }`. The spec stores both in plugin data without saying how they're arranged. Grouping the settings under one key keeps them separate from runtime state. This is nested rather than the sample plugin's flat settings object.
 - **View filters and collapsed groups** are view state (`getState`/`setState`), which Obsidian saves per leaf in `workspace.json`, following Obsidian convention. They stay on each device rather than syncing through `data.json`.
-- **Synced timer:** `onExternalSettingsChange` reloads `data.json` when Sync changes it, so a timer started or stopped on another device shows up without a restart. It also re-indexes if the folder settings changed. Concurrent changes on two devices resolve as last write wins.
+- **Synced timer:** `onExternalSettingsChange` reloads `data.json` when Sync changes it, so a timer started or stopped on another device shows up without a restart. It also re-indexes if the folder settings changed. Concurrent changes on two devices resolve as last write wins:
+  - A stop whose log write is still in flight when Sync brings in a different timer keeps the synced timer rather than clearing it.
+  - The stale-timer dialog remembers the timer it asked about (task id and start). If Sync has replaced that timer by the time you choose, the choice is ignored.
+  - Starting a task locally still replaces a synced timer. If two devices both stop the same timer before syncing, each writes a log entry, so that time counts twice.
+- **Folder renames:** renaming or moving a folder rebuilds both indexes. Obsidian also sends a rename event for each file inside the folder, which already keeps the indexes current, so the rebuild is a safety net for moves that may only send one event. Renaming the log folder in the vault without changing the setting leaves the time index empty until the setting is updated, as the setting names the folder.
 - **"Stop at…" takes a date and time** (`datetime-local`), not just a time. A stale timer has usually crossed midnight, so a time alone would be ambiguous. It's validated to be between the start minute and now.
 - **todo → doing on start only when the note literally says `todo`.** A note with an unknown status displays as todo but isn't rewritten (§4.1).
 - **Row time is always "tracked today / estimate"**, as §8 says. The Today/Week/All toggle drives the group totals only. Group totals include sub-folders, because collapsing a parent hides its children.
@@ -56,7 +60,7 @@ On-disk formats (task frontmatter, log lines, `activeTimer`) match the spec exac
 ## Other changes
 
 **Shared mock (`packages/obsidian-mock`).** Plugin wiring tests needed more of the API, so per AGENTS.md the mock was extended rather than adding `vi.mock` calls:
-- **Vault:** folders, `createFolder`, `getFolderByPath`, `getAllLoadedFiles` and `rename`.
+- **Vault:** folders, `createFolder`, `getFolderByPath`, `getAllLoadedFiles` and `rename`. Renaming a folder moves everything inside it and emits a rename event for the folder, then one for each moved file and folder. `obsidian.d.ts` doesn't specify this; it follows plugin developers' reports on the Obsidian forum ([#92658](https://forum.obsidian.md/t/renaming-folder-names-and-drag-and-drop-events-in-file-explorer/92658), [#76667](https://forum.obsidian.md/t/problem-with-renaming-folders-in-obsidian-plugin/76667)) and still needs checking in the dev vault (see `TESTING.md`).
 - **New APIs:** `MetadataCache` (with a small YAML subset), `FileManager.processFrontMatter`/`renameFile`, `parseYaml`/`stringifyYaml`/`getFrontMatterInfo`, `WorkspaceLeaf` (`setViewState`/`getViewState`), `View`/`ItemView` (`getState`/`setState`), workspace leaf helpers (`getLeaf`, `getLeavesOfType`, `ensureSideLeaf`, `revealLeaf`, `requestSaveLayout`), `SuggestModal`/`FuzzySuggestModal`, `AbstractInputSuggest`, `setIcon`, `debounce`, `TextComponent.inputEl`, `registerView`/`registerHoverLinkSource`, `Plugin.onExternalSettingsChange`.
 - **Fix:** the mock `Plugin` kept saved data in a test-only field called `data`. That field collided with a plugin's own `data` field, so every `saveData` swapped the plugin's object for a clone. It's now `savedData`.
 - **DOM helpers:** `setAttr`, `setCssProps`, `appendText`.
@@ -64,7 +68,7 @@ On-disk formats (task frontmatter, log lines, `activeTimer`) match the spec exac
 - **Signatures** were checked against `obsidian.d.ts`, and `getAbstractFileByPath`, `getFrontMatterInfo`, `FuzzyMatch`, `rename` and `registerHoverLinkSource` were corrected to match.
 
 **Other repo changes**
-- **Extra tests:** `test/breaks.test.ts` and `test/task.test.ts` cover the pure break and task helpers. `test/plugin.test.ts` (see above) covers task creation, start → switch → stop, the midnight split, stale "Stop at…", rename and delete while running, a timer and settings synced from another device, duplicates, preserved log comments, view filters reacting to hand-edited tags, and view state round-tripping through `getState`/`setState`.
+- **Extra tests:** `test/breaks.test.ts` and `test/task.test.ts` cover the pure break and task helpers. `test/plugin.test.ts` (see above) covers task creation, start → switch → stop, the midnight split, stale "Stop at…", rename and delete while running, a timer and settings synced from another device (including during an in-flight stop and with the stale dialog open), log and ancestor folder renames, duplicates, preserved log comments, view filters reacting to hand-edited tags, and view state round-tripping through `getState`/`setState`.
 - **Template test:** the template's sample test (`test/main.test.ts`) was removed because it tested the template's greeting command.
 - **Dev vault:** `vault/.obsidian/community-plugins.json` now enables `task-tracker`.
 - **Spec location:** `SPEC.md` moved from the repo root into this folder.
