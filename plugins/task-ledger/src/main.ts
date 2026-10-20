@@ -14,7 +14,7 @@ import {
   sanitizeProject,
   sanitizeTitle,
 } from "./model/task";
-import { DEFAULT_SETTINGS, TaskTrackerSettingTab, type TaskTrackerSettings } from "./settings";
+import { DEFAULT_SETTINGS, TaskLedgerSettingTab, type TaskLedgerSettings } from "./settings";
 import { BreakTracker } from "./timer/breaks";
 import { ensureFolder, ensureLogNote, Timer, TimerStatusBar, type ActiveTimer } from "./timer/timer";
 import { NewTaskModal, type NewTaskInput } from "./ui/newTaskModal";
@@ -24,7 +24,7 @@ import { TaskView, VIEW_TYPE } from "./ui/taskView";
 
 /** `data.json`. It syncs between devices, so it holds only settings and the running timer. */
 export interface PluginData {
-  settings: TaskTrackerSettings;
+  settings: TaskLedgerSettings;
   activeTimer: ActiveTimer | null;
 }
 
@@ -34,13 +34,13 @@ function readActiveTimer(value: unknown): ActiveTimer | null {
   return Number.isNaN(new Date(t.start).getTime()) ? null : { taskId: t.taskId, start: t.start };
 }
 
-export default class TaskTrackerPlugin extends Plugin {
+export default class TaskLedgerPlugin extends Plugin {
   data: PluginData = {
     settings: { ...DEFAULT_SETTINGS },
     activeTimer: null,
   };
   /** Same object as `data.settings`, for the plugin's whole lifetime. */
-  override settings: TaskTrackerSettings = this.data.settings;
+  override settings: TaskLedgerSettings = this.data.settings;
   tasks!: TaskIndex;
   time!: TimeIndex;
   timer!: Timer;
@@ -67,7 +67,7 @@ export default class TaskTrackerPlugin extends Plugin {
     });
 
     this.registerView(VIEW_TYPE, (leaf) => new TaskView(leaf, this));
-    this.registerHoverLinkSource(VIEW_TYPE, { display: "Task tracker", defaultMod: false });
+    this.registerHoverLinkSource(VIEW_TYPE, { display: "Task ledger", defaultMod: false });
     this.addRibbonIcon("list-checks", "Open task view", () => void this.activateView());
 
     this.statusBar = new TimerStatusBar(this.addStatusBarItem(), this.timer, () => {
@@ -77,7 +77,7 @@ export default class TaskTrackerPlugin extends Plugin {
     });
 
     this.addCommands();
-    this.addSettingTab(new TaskTrackerSettingTab(this.app, this));
+    this.addSettingTab(new TaskLedgerSettingTab(this.app, this));
 
     this.app.workspace.onLayoutReady(async () => {
       const register = (ref: Parameters<Plugin["registerEvent"]>[0]) => this.registerEvent(ref);

@@ -1,4 +1,4 @@
-# Task Tracker
+# Task Ledger
 
 Task tracking for Obsidian with projects, tags and time tracking. Tasks are ordinary notes, time goes into daily log notes, and everything stays readable and editable by hand. Works on desktop and mobile.
 
@@ -70,4 +70,4 @@ The task view's filters and collapsed groups are view state. Obsidian saves them
 
 ## Development
 
-From the repo root: `pnpm dev task-tracker`, `pnpm test task-tracker`, `pnpm build`. See `TESTING.md` for the manual checklist.
+From the repo root: `pnpm dev task-ledger`, `pnpm test task-ledger`, `pnpm build`. See `TESTING.md` for the manual checklist.

@@ -11,9 +11,9 @@ import {
 import { formatClock, formatDuration } from "../model/duration";
 import type { LogEntry } from "../model/log";
 import type { Task } from "../index/taskIndex";
-import type TaskTrackerPlugin from "../main";
+import type TaskLedgerPlugin from "../main";
 
-export const VIEW_TYPE = "task-tracker-view";
+export const VIEW_TYPE = "task-ledger-view";
 
 export type StatusFilter = "all" | "open" | "done";
 
@@ -89,7 +89,7 @@ export class TaskView extends ItemView {
 
   constructor(
     leaf: WorkspaceLeaf,
-    private plugin: TaskTrackerPlugin,
+    private plugin: TaskLedgerPlugin,
   ) {
     super(leaf);
   }
@@ -130,7 +130,7 @@ export class TaskView extends ItemView {
   override async onOpen(): Promise<void> {
     const root = this.contentEl;
     root.empty();
-    root.addClass("task-tracker-view");
+    root.addClass("task-ledger-view");
     this.headerEl = root.createDiv({ cls: "tt-header" });
     this.buildControls(root.createDiv({ cls: "tt-controls" }));
     this.listEl = root.createDiv({ cls: "tt-list" });

@@ -26,7 +26,7 @@ export class NewTaskModal extends Modal {
   override onOpen(): void {
     this.setTitle("New task");
     const { contentEl } = this;
-    contentEl.addClass("task-tracker-new-task");
+    contentEl.addClass("task-ledger-new-task");
 
     const field = (name: string, key: keyof NewTaskInput, placeholder: string, focus = false) =>
       new Setting(contentEl).setName(name).addText((text) => {

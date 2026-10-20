@@ -1,6 +1,6 @@
-/* Task Tracker. Everything is scoped to .task-tracker-* containers. */
+/* Task Ledger. Everything is scoped to .task-ledger-* containers. */
 
-.task-tracker-view {
+.task-ledger-view {
   display: flex;
   flex-direction: column;
   gap: var(--size-4-3);
@@ -8,27 +8,27 @@
   overflow-x: hidden;
 }
 
-.task-tracker-view button {
+.task-ledger-view button {
   min-width: 0;
 }
 
-.task-tracker-view .tt-link {
+.task-ledger-view .tt-link {
   cursor: var(--cursor-link, pointer);
 }
 
-.task-tracker-view .tt-link:hover {
+.task-ledger-view .tt-link:hover {
   color: var(--text-accent);
 }
 
 /* Header */
-.task-tracker-view .tt-totals {
+.task-ledger-view .tt-totals {
   display: flex;
   flex-wrap: wrap;
   gap: var(--size-4-3);
   font-weight: var(--font-semibold);
 }
 
-.task-tracker-view .tt-running {
+.task-ledger-view .tt-running {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -39,35 +39,35 @@
   background: var(--background-modifier-hover);
 }
 
-.task-tracker-view .tt-running-title {
+.task-ledger-view .tt-running-title {
   flex: 1 1 8em;
   overflow-wrap: anywhere;
 }
 
-.task-tracker-view .tt-elapsed {
+.task-ledger-view .tt-elapsed {
   font-variant-numeric: tabular-nums;
 }
 
 /* Controls */
-.task-tracker-view .tt-controls {
+.task-ledger-view .tt-controls {
   display: flex;
   flex-direction: column;
   gap: var(--size-4-2);
 }
 
-.task-tracker-view .tt-controls-row,
-.task-tracker-view .tt-tag-filter {
+.task-ledger-view .tt-controls-row,
+.task-ledger-view .tt-tag-filter {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--size-4-2);
 }
 
-.task-tracker-view .tt-search {
+.task-ledger-view .tt-search {
   width: 100%;
 }
 
-.task-tracker-view .tt-chip {
+.task-ledger-view .tt-chip {
   height: auto;
   padding: 0 var(--size-4-2);
   border-radius: var(--radius-l);
@@ -77,17 +77,17 @@
   box-shadow: none;
 }
 
-.task-tracker-view .tt-chip.is-selected {
+.task-ledger-view .tt-chip.is-selected {
   color: var(--text-on-accent);
   background: var(--interactive-accent);
 }
 
 /* List */
-.task-tracker-view .tt-group {
+.task-ledger-view .tt-group {
   margin-left: calc(var(--tt-depth, 0) * var(--size-4-4));
 }
 
-.task-tracker-view .tt-group-header {
+.task-ledger-view .tt-group-header {
   display: flex;
   align-items: center;
   gap: var(--size-4-1);
@@ -96,24 +96,24 @@
   cursor: pointer;
 }
 
-.task-tracker-view .tt-group-name {
+.task-ledger-view .tt-group-name {
   flex: 1 1 auto;
   overflow-wrap: anywhere;
 }
 
-.task-tracker-view .tt-group-total,
-.task-tracker-view .tt-time {
+.task-ledger-view .tt-group-total,
+.task-ledger-view .tt-time {
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   font-variant-numeric: tabular-nums;
 }
 
-.task-tracker-view .tt-caret {
+.task-ledger-view .tt-caret {
   display: inline-flex;
   color: var(--text-faint);
 }
 
-.task-tracker-view .tt-row {
+.task-ledger-view .tt-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -122,57 +122,57 @@
   border-radius: var(--radius-s);
 }
 
-.task-tracker-view .tt-row.is-running {
+.task-ledger-view .tt-row.is-running {
   background: var(--background-modifier-hover);
 }
 
-.task-tracker-view .tt-row.is-done .tt-title {
+.task-ledger-view .tt-row.is-done .tt-title {
   color: var(--text-muted);
   text-decoration: line-through;
 }
 
-.task-tracker-view .tt-title {
+.task-ledger-view .tt-title {
   flex: 1 1 8em;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.task-tracker-view .tt-tags {
+.task-ledger-view .tt-tags {
   display: flex;
   flex-wrap: wrap;
   gap: var(--size-4-1);
 }
 
-.task-tracker-view .tt-play,
-.task-tracker-view .tt-stop {
+.task-ledger-view .tt-play,
+.task-ledger-view .tt-stop {
   padding: var(--size-4-1);
   height: auto;
 }
 
-.task-tracker-view .tt-empty {
+.task-ledger-view .tt-empty {
   color: var(--text-muted);
 }
 
 /* Range toggle */
-.task-tracker-view .tt-range {
+.task-ledger-view .tt-range {
   display: flex;
   gap: var(--size-4-1);
 }
 
-.task-tracker-view .tt-range-btn {
+.task-ledger-view .tt-range-btn {
   flex: 1 1 0;
 }
 
-.task-tracker-view .tt-range-btn.is-active {
+.task-ledger-view .tt-range-btn.is-active {
   color: var(--text-on-accent);
   background: var(--interactive-accent);
 }
 
 /* Modals */
-.task-tracker-error {
+.task-ledger-error {
   color: var(--text-error);
 }
 
-.task-tracker-error:empty {
+.task-ledger-error:empty {
   display: none;
 }

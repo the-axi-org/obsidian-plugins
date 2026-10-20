@@ -1,4 +1,4 @@
-# Task Tracker — Obsidian Plugin Spec
+# Task Ledger — Obsidian Plugin Spec
 
 Build an Obsidian plugin for task tracking with projects, tags and time tracking. Tasks are ordinary markdown notes in a folder hierarchy. Time is recorded in daily log notes. Break reminders are a small optional extra.
 
@@ -30,7 +30,7 @@ Work milestone by milestone (see the end of this file). Each milestone must buil
 - UI in plain TypeScript using Obsidian's DOM helpers (`createEl`, `createDiv`, `setIcon`). No UI framework.
 - No runtime dependencies beyond `obsidian`. Dev dependencies allowed: `vitest` for tests.
 - No Node or Electron APIs anywhere. `manifest.json` → `"isDesktopOnly": false`.
-- Plugin id: `task-tracker`. Name: `Task Tracker`.
+- Plugin id: `task-ledger`. Name: `Task Ledger`.
 - All file writes go through Obsidian APIs:
   - Frontmatter edits: `app.fileManager.processFrontMatter`.
   - Log appends and edits: `app.vault.process` (atomic read-modify-write).
@@ -192,7 +192,7 @@ No default hotkeys.
 
 ## 8. Task view (sidebar `ItemView`)
 
-View type: `task-tracker-view`. Opens in the right sidebar.
+View type: `task-ledger-view`. Opens in the right sidebar.
 
 Layout, top to bottom:
 1. **Header.** Today's tracked total and this week's total. If a timer is running, the current task with elapsed time and a stop button.

@@ -170,7 +170,7 @@ export class TimerStatusBar {
     private timer: Timer,
     onClick: () => void,
   ) {
-    el.addClass("task-tracker-status", "mod-clickable");
+    el.addClass("task-ledger-status", "mod-clickable");
     el.addEventListener("click", onClick);
     this.update();
   }

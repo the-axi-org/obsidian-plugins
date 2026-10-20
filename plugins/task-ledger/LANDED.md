@@ -1,4 +1,4 @@
-# Task Tracker: what landed
+# Task Ledger: what landed
 
 Compared against [`SPEC.md`](SPEC.md). Status as of 2026-10-20: `pnpm typecheck`, `pnpm lint`, `pnpm test` (100 tests) and `pnpm build` pass. The manual checklist in [`TESTING.md`](TESTING.md) has **not** been run in Obsidian yet.
 
@@ -24,7 +24,7 @@ On-disk formats (task frontmatter, log lines, `activeTimer`) match the spec exac
 
 ## Open questions (§13), as answered
 
-- **Show the note body in the view?** Yes, as a hover preview. Hovering a title shows Obsidian's page preview without a modifier key; registered as hover source "Task tracker", changeable under Settings → Page preview.
+- **Show the note body in the view?** Yes, as a hover preview. Hovering a title shows Obsidian's page preview without a modifier key; registered as hover source "Task ledger", changeable under Settings → Page preview.
 - **Archive or move done tasks?** No. They stay in place, and the status filter hides them by default.
 
 ## Deviations from the spec
@@ -70,7 +70,7 @@ On-disk formats (task frontmatter, log lines, `activeTimer`) match the spec exac
 **Other repo changes**
 - **Extra tests:** `test/breaks.test.ts` and `test/task.test.ts` cover the pure break and task helpers. `test/plugin.test.ts` (see above) covers task creation, start → switch → stop, the midnight split, stale "Stop at…", rename and delete while running, a timer and settings synced from another device (including during an in-flight stop and with the stale dialog open), log and ancestor folder renames, duplicates, preserved log comments, view filters reacting to hand-edited tags, and view state round-tripping through `getState`/`setState`.
 - **Template test:** the template's sample test (`test/main.test.ts`) was removed because it tested the template's greeting command.
-- **Dev vault:** `vault/.obsidian/community-plugins.json` now enables `task-tracker`.
+- **Dev vault:** `vault/.obsidian/community-plugins.json` now enables `task-ledger`.
 - **Spec location:** `SPEC.md` moved from the repo root into this folder.
 
 ## Not done yet

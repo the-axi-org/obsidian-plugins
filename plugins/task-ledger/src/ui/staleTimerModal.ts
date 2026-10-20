@@ -39,7 +39,7 @@ export class StaleTimerModal extends Modal {
     );
 
     let stopAt = "";
-    const error = contentEl.createDiv({ cls: "task-tracker-error" });
+    const error = contentEl.createDiv({ cls: "task-ledger-error" });
     new Setting(contentEl)
       .setName("Stop at…")
       .setDesc("When did you actually stop?")

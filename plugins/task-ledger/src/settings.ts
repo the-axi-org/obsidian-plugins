@@ -1,8 +1,8 @@
 import { App, PluginSettingTab, Setting, TFolder } from "obsidian";
-import type TaskTrackerPlugin from "./main";
+import type TaskLedgerPlugin from "./main";
 import { ListSuggest } from "./ui/taskSuggest";
 
-export interface TaskTrackerSettings {
+export interface TaskLedgerSettings {
   tasksRoot: string;
   logFolder: string;
   defaultProject: string;
@@ -11,7 +11,7 @@ export interface TaskTrackerSettings {
   maxRunningHours: number;
 }
 
-export const DEFAULT_SETTINGS: TaskTrackerSettings = {
+export const DEFAULT_SETTINGS: TaskLedgerSettings = {
   tasksRoot: "Tasks",
   logFolder: "Tasks/_log",
   defaultProject: "Inbox",
@@ -28,10 +28,10 @@ function allFolders(app: App): string[] {
     .sort();
 }
 
-export class TaskTrackerSettingTab extends PluginSettingTab {
-  plugin: TaskTrackerPlugin;
+export class TaskLedgerSettingTab extends PluginSettingTab {
+  plugin: TaskLedgerPlugin;
 
-  constructor(app: App, plugin: TaskTrackerPlugin) {
+  constructor(app: App, plugin: TaskLedgerPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }

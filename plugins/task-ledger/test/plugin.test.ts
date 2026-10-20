@@ -14,7 +14,7 @@ import {
 } from "@op/obsidian-mock";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import manifest from "../manifest.json";
-import TaskTrackerPlugin from "../src/main";
+import TaskLedgerPlugin from "../src/main";
 import { StaleTimerModal } from "../src/ui/staleTimerModal";
 import { TaskView, VIEW_TYPE } from "../src/ui/taskView";
 
@@ -23,11 +23,11 @@ const task = (id: string, extra = "") => `---\nid: ${id}\nstatus: todo\ntags: [b
 /** Lets the async onLayoutReady callback and queued writes finish. */
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
-let plugins: TaskTrackerPlugin[] = [];
+let plugins: TaskLedgerPlugin[] = [];
 
 async function setup(files: Record<string, string> = {}, data: unknown = null) {
   const app = createMockApp({ files });
-  const plugin = await loadPlugin(TaskTrackerPlugin, manifest, { app, data });
+  const plugin = await loadPlugin(TaskLedgerPlugin, manifest, { app, data });
   plugins.push(plugin);
   await flush();
   return { app, plugin };
@@ -104,7 +104,7 @@ describe("tasks", () => {
     const copy = await app.vault.create("Tasks/Original 1.md", task("t-aaaaaa"));
     older.stat.ctime = 1;
     copy.stat.ctime = 2;
-    const plugin = await loadPlugin(TaskTrackerPlugin, manifest, { app });
+    const plugin = await loadPlugin(TaskLedgerPlugin, manifest, { app });
     plugins.push(plugin);
     await flush();
 
@@ -316,7 +316,7 @@ describe("timer", () => {
     await time.simulateChange("2026-09-25T17:00");
     await button.simulateClick();
     expect(modal.isOpen).toBe(true);
-    expect(modal.contentEl.querySelector(".task-tracker-error")?.textContent).not.toBe("");
+    expect(modal.contentEl.querySelector(".task-ledger-error")?.textContent).not.toBe("");
 
     await time.simulateChange("2026-09-25T19:30");
     await button.simulateClick();
